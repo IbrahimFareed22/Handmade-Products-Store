@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Product Reviews</title>
+  <style>
+    body {
+      background-color: #fff0f5;
+      font-family: Arial, sans-serif;
+      padding: 40px;
+      color: #8e125c;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+    .review-box {
+      background-color: white;
+      padding: 15px;
+      margin-bottom: 15px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    .review-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .review-header img {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+    }
+    .review-rating {
+      color: gold;
+    }
+    form {
+      max-width: 500px;
+      margin: auto;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    label {
+      display: block;
+      margin: 15px 0 5px;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #8e125c;
+      border-radius: 5px;
+    }
+    button {
+      width: 100%;
+      padding: 15px;
+      margin-top: 20px;
+      background-color: #8e125c;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #a81f6d;
+    }
+  </style>
+</head>
+<body>
+  <h1>Product Reviews</h1>
+
+  <!-- Reviews Display Section -->
+  <div id="reviews-container"></div>
+
+  <!-- Add Review Form -->
+  <form id="reviewForm">
+    <label for="rating">Rating</label>
+    <select id="rating" required>
+      <option value="">-- Select Rating --</option>
+      <option value="5">5 ⭐⭐⭐⭐⭐</option>
+      <option value="4">4 ⭐⭐⭐⭐</option>
+      <option value="3">3 ⭐⭐⭐</option>
+      <option value="2">2 ⭐⭐</option>
+      <option value="1">1 ⭐</option>
+    </select>
+
+    <label for="comment">Comment</label>
+    <textarea id="comment" placeholder="Write your review..." rows="4" required></textarea>
+
+    <button type="submit">Submit Review</button>
+  </form>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const productId = urlParams.get("productId");
+    const userId = localStorage.getItem("userId");
+
+    async function fetchReviews() {
+      if (!productId) return alert("Product ID is missing");
+
+      const res = await fetch(`/api/reviews/${productId}`);
+      const data = await res.json();
+      const container = document.getElementById('reviews-container');
+      container.innerHTML = ''; // Clear current reviews
+
+      data.forEach(review => {
+        container.innerHTML += `
+          <div class="review-box">
+            <div class="review-header">
+              <img src="https://i.pravatar.cc/150?u=${review.user._id}" />
+              <strong>${review.user.email}</strong>
+            </div>
+            <div class="review-rating">${'★'.repeat(review.rating)}${'☆'.repeat(5 - review.rating)}</div>
+            <p>${review.comment}</p>
+            <small>${new Date(review.createdAt).toLocaleString()}</small>
+          </div>
+        `;
+      });
+    }
+
+    async function submitReview(e) {
+      e.preventDefault();
+
+      const rating = parseInt(document.getElementById('rating').value);
+      const comment = document.getElementById('comment').value;
+
+      if (!userId) return alert("Please log in to submit a review.");
+      if (!rating || !comment) return alert("Please provide a rating and a comment.");
+
+      const reviewData = { user: userId, product: productId, rating, comment };
+
+      try {
+        const res = await fetch('/api/reviews', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(reviewData),
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          document.getElementById('comment').value = '';
+          fetchReviews(); // Reload reviews
+        } else {
+          alert("Error: " + data.message);
+        }
+      } catch (err) {
+        alert("Error submitting review: " + err.message);
+      }
+    }
+
+    document.getElementById('reviewForm').addEventListener('submit', submitReview);
+
+    // Fetch and display reviews when the page loads
+    fetchReviews();
+  </script>
+</body>
+</html>

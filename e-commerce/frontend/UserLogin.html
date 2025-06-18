@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Login</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      text-align: center;
+      color: rgb(124, 11, 77);
+      position: relative;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    }
+
+    body::after {
+      content: "";
+      background-color: pink;
+      background-size: cover;
+      background-repeat: no-repeat;
+      position: absolute;
+      top: -30px;
+      left: -30px;
+      right: -30px;
+      bottom: -30px;
+      z-index: -2;
+      filter: blur(4px);
+    }
+
+    .user-form {
+      position: relative;
+      z-index: 1;
+      padding: 40px;
+      color: white;
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 10px;
+      max-width: 600px;
+      margin: 0 auto;
+      text-align: left;
+    }
+
+    .user-form h2 {
+      font-size: 2em;
+      margin-bottom: 20px;
+    }
+
+    .user-form input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid rgb(124, 11, 77);
+      border-radius: 5px;
+    }
+
+    .user-form button {
+      width: 100%;
+      padding: 15px;
+      font-size: 1.2em;
+      background-color: rgb(124, 11, 77);
+      color: white;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+    }
+
+    .user-form button:hover {
+      background-color: white;
+      color: rgb(124, 11, 77);
+      font-weight: bold;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .user-form p {
+      text-align: center;
+      margin-top: 15px;
+      color: white;
+    }
+
+    .user-form a {
+      color: pink;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="user-form">
+    <h2>User Login</h2>
+    <input type="email" id="email" placeholder="Email" required />
+    <input type="password" id="password" placeholder="Password" required />
+    <button type="submit" id="userLoginSubmit">Login</button>
+
+    <p>
+      Don't have an account?
+      <a href="UserRegister.html">Register here</a>
+    </p>
+  </div>
+
+  <script>
+   document.getElementById("userLoginSubmit").addEventListener("click", async function (e) {
+  e.preventDefault();
+
+  const credentials = {
+    email: document.getElementById("email").value,
+    password: document.getElementById("password").value,
+  };
+
+  try {
+    const res = await fetch("http://localhost:5000/api/users/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(credentials),
+    });
+
+    const data = await res.json();
+    console.log("Response data:", data);  // طباعة البيانات القادمة من السيرفر
+
+    if (res.ok) {
+      if (data.user && data.user.id) {
+        // تأكد من أن _id موجود في البيانات
+        localStorage.setItem("user", JSON.stringify(data.user)); // تخزين البيانات مع الـ _id
+        alert("Login successful!");
+        window.location.href = "home.html"; // الانتقال إلى صفحة الـ home بعد تسجيل الدخول
+      } else {
+        alert("User data is incomplete.");
+      }
+    } else {
+      alert("Login failed: " + data.message);
+    }
+  } catch (err) {
+    alert("Login error: " + err.message);
+  }
+});
+
+  </script>
+</body>
+</html>

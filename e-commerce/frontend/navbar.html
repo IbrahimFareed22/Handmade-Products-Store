@@ -1,0 +1,99 @@
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+
+<div class="top-bar">
+    <input type="button" value="Show Categories" class="show-categories-btn" onclick="window.location.href='showCategories.html'">
+    <input type="button" value="Home" class="show-categories-btn" onclick="window.location.href='start.html'">
+    <div class="cart-container" onclick="window.location.href='cart.html'">
+        <!-- Font Awesome Cart Icon -->
+        <i class="fas fa-shopping-cart cart-icon"></i>
+        <span id="cart-count" class="cart-count">0</span>
+    </div>
+</div>
+
+<style>
+    .top-bar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        background-color: rgb(124, 11, 77);
+        padding: 10px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 999;
+    }
+
+    .top-bar .show-categories-btn {
+        width: 200px;
+        padding: 15px;
+        font-size: 1em;
+        background-color: white;
+        color: rgb(124, 11, 77);
+        border: 2px solid pink;
+        border-radius: 30px;
+        cursor: pointer;
+        font-weight: bold;
+        margin: 0 10px;
+    }
+
+    .top-bar .show-categories-btn:hover {
+        background-color: pink;
+        color: white;
+    }
+
+    .cart-container {
+        position: relative;
+        margin-left: 20px;
+        cursor: pointer;
+    }
+
+    .cart-icon {
+        font-size: 30px;
+        color: white;
+        position: relative;
+        top: 5px;
+    }
+
+    .cart-count {
+        position: absolute;
+        top: -5px;
+        right: -5px;
+        background-color: red;
+        color: white;
+        border-radius: 50%;
+        padding: 5px;
+        font-size: 14px;
+    }
+</style>
+
+<script>
+    // Immediately update the cart count when the navbar is loaded
+    (function() {
+        updateCartCount();
+    })();
+    
+    // Also update when DOM is fully loaded
+    document.addEventListener("DOMContentLoaded", function() {
+        updateCartCount();
+    });
+    
+    // Function to calculate and update cart count
+    function updateCartCount() {
+        try {
+            const cart = JSON.parse(sessionStorage.getItem('cart')) || [];
+            // Calculate total quantity across all items
+            const totalItems = cart.reduce((total, item) => total + (item.quantity || 1), 0);
+            
+            const countElement = document.getElementById("cart-count");
+            if (countElement) {
+                countElement.textContent = totalItems;  // Update the cart count
+            }
+        } catch (error) {
+            console.error("Error updating cart count:", error);
+            document.getElementById("cart-count").textContent = "0";  // Handle any potential errors by resetting to 0
+        }
+    }
+</script>

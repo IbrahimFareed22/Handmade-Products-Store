@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Product Management</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      direction: ltr;
+      background-color: #f7f7f7;
+      margin: 0;
+      padding: 0;
+    }
+    .content {
+      max-width: 800px;
+      margin: auto;
+      padding: 20px;
+    }
+    .product-item {
+      background: #fff;
+      margin-bottom: 10px;
+      padding: 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .product-item img {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      margin-left: 10px;
+    }
+    .form-container, .overlay {
+      display: none;
+    }
+    .form-container {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: white;
+      padding: 20px;
+      z-index: 1001;
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      border-radius: 8px;
+      width: 90%;
+      max-width: 400px;
+    }
+    .form-container input, .form-container select {
+      width: 100%;
+      padding: 8px;
+      margin: 8px 0;
+    }
+    .form-container button {
+      padding: 10px;
+      width: 48%;
+      margin: 5px 1%;
+    }
+    .overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+    }
+    .create-btn {
+      background-color: #7c0b4d;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .create-btn:hover {
+      background-color: #9e1e6f;
+    }
+  </style>
+</head>
+<body>
+  <div class="content">
+    <h1>Products</h1>
+    <p>Manage your store's products here.</p>
+    <div id="productList"></div>
+    <button class="create-btn" onclick="openProductForm()">Add Product</button>
+  </div>
+
+  <!-- Product Form -->
+  <div class="form-container" id="productFormContainer">
+    <h2 id="formTitle">Add Product</h2>
+    <input type="hidden" id="productId">
+    <input type="text" id="productName" placeholder="Product Name" required>
+    <input type="text" id="productDescription" placeholder="Product Description" required>
+    <input type="number" id="productPrice" placeholder="Product Price" required>
+    <select id="productCategory" required></select>
+    <input type="file" id="productImage" accept="image/*">
+    <div style="text-align:center;">
+      <button onclick="submitProduct()">Save</button>
+      <button onclick="closeProductForm()">Cancel</button>
+    </div>
+  </div>
+
+  <div class="overlay" id="overlay" onclick="closeProductForm()"></div>
+
+  <script>
+    const baseApi = 'http://localhost:5000/api';
+    let editingProductId = null;
+
+    async function fetchCategories() {
+      const res = await fetch(`${baseApi}/categories`);
+      const categories = await res.json();
+      const select = document.getElementById('productCategory');
+      select.innerHTML = '';
+      categories.forEach(cat => {
+        const opt = document.createElement('option');
+        opt.value = cat._id;
+        opt.textContent = cat.name;
+        select.appendChild(opt);
+      });
+    }
+
+    async function fetchProducts() {
+      const res = await fetch(`${baseApi}/products`);
+      const products = await res.json();
+      const list = document.getElementById('productList');
+      list.innerHTML = '';
+      products.forEach(p => {
+        const item = document.createElement('div');
+        item.className = 'product-item';
+        item.innerHTML = `
+          <div>
+            <strong>${p.name}</strong><br>
+            ${p.description}<br>
+            ${p.price} EGP<br>
+            ${p.category?.name || ''}
+          </div>
+          <div>
+            ${p.image ? `<img src="${p.image}" alt="${p.name}">` : ''}
+            <button onclick="editProduct('${p._id}')">Edit</button>
+            <button onclick="deleteProduct('${p._id}')">Delete</button>
+          </div>
+        `;
+        list.appendChild(item);
+      });
+    }
+
+    function openProductForm() {
+      editingProductId = null;
+      document.getElementById('formTitle').innerText = 'Add Product';
+      document.getElementById('productId').value = '';
+      document.getElementById('productName').value = '';
+      document.getElementById('productDescription').value = '';
+      document.getElementById('productPrice').value = '';
+      document.getElementById('productImage').value = '';
+      document.getElementById('productFormContainer').style.display = 'block';
+      document.getElementById('overlay').style.display = 'block';
+    }
+
+    function closeProductForm() {
+      document.getElementById('productFormContainer').style.display = 'none';
+      document.getElementById('overlay').style.display = 'none';
+    }
+
+    async function editProduct(id) {
+      const res = await fetch(`${baseApi}/products/${id}`);
+      const p = await res.json();
+      editingProductId = id;
+      document.getElementById('formTitle').innerText = 'Edit Product';
+      document.getElementById('productId').value = p._id;
+      document.getElementById('productName').value = p.name;
+      document.getElementById('productDescription').value = p.description;
+      document.getElementById('productPrice').value = p.price;
+      document.getElementById('productCategory').value = p.category._id;
+      document.getElementById('productImage').value = '';
+      document.getElementById('productFormContainer').style.display = 'block';
+      document.getElementById('overlay').style.display = 'block';
+    }
+
+    async function submitProduct() {
+      const name = document.getElementById('productName').value;
+      const description = document.getElementById('productDescription').value;
+      const price = document.getElementById('productPrice').value;
+      const categoryId = document.getElementById('productCategory').value;
+      const image = document.getElementById('productImage').files[0];
+
+      const formData = new FormData();
+      formData.append('name', name);
+      formData.append('description', description);
+      formData.append('price', price);
+      formData.append('categoryId', categoryId);
+      if (image) formData.append('image', image);
+
+      const url = editingProductId ? `${baseApi}/products/${editingProductId}` : `${baseApi}/products`;
+      const method = editingProductId ? 'PUT' : 'POST';
+
+      await fetch(url, { method, body: formData });
+      closeProductForm();
+      fetchProducts();
+    }
+
+    async function deleteProduct(id) {
+      await fetch(`${baseApi}/products/${id}`, { method: 'DELETE' });
+      fetchProducts();
+    }
+
+    window.onload = () => {
+      fetchCategories();
+      fetchProducts();
+    };
+  </script>
+</body>
+</html>

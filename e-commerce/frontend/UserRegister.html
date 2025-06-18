@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Register</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      text-align: center;
+      color: rgb(124, 11, 77);
+      position: relative;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    }
+
+    body::after {
+      content: "";
+      background-color: pink;
+      background-size: cover;
+      background-repeat: no-repeat;
+      position: absolute;
+      top: -30px;
+      left: -30px;
+      right: -30px;
+      bottom: -30px;
+      z-index: -2;
+      filter: blur(4px);
+    }
+
+    .register-form {
+      position: relative;
+      z-index: 1;
+      padding: 40px;
+      color: white;
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 10px;
+      max-width: 600px;
+      margin: 0 auto;
+      text-align: left;
+    }
+
+    .register-form h2 {
+      font-size: 2em;
+      margin-bottom: 20px;
+    }
+
+    .register-form input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid rgb(124, 11, 77);
+      border-radius: 5px;
+    }
+
+    .register-form button {
+      width: 100%;
+      padding: 15px;
+      font-size: 1.2em;
+      background-color: rgb(124, 11, 77);
+      color: white;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+    }
+
+    .register-form button:hover {
+      background-color: white;
+      color: rgb(124, 11, 77);
+      font-weight: bold;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    #errorMessage {
+      margin-top: 15px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <form class="register-form" id="registerForm">
+    <h2>User Registration</h2>
+    <input type="text" id="name" placeholder="Name" required />
+    <input type="email" id="email" placeholder="Email" required />
+    <input type="text" id="phone" placeholder="Phone" required />
+    <input type="password" id="password" placeholder="Password" required />
+    <button type="submit">Register</button>
+    <div id="errorMessage"></div>
+    <p>Already have an account? <a href="UserLogin.html">Login</a></p>
+  </form>
+
+  <script>
+    document.getElementById("registerForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+  
+      const errorDiv = document.getElementById("errorMessage");
+      errorDiv.textContent = ""; // تفريغ الرسائل السابقة
+      errorDiv.style.color = "red";
+  
+      const name = document.getElementById("name").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const phone = document.getElementById("phone").value.trim();
+      const password = document.getElementById("password").value;
+  
+      // التحقق من صحة البيانات
+      if (name.length < 3) {
+        errorDiv.textContent = "❌ Name must be at least 3 characters.";
+        return;
+      }
+  
+      if (!/^\d{10,15}$/.test(phone)) {
+        errorDiv.textContent = "❌ Phone number must contain only digits and be between 10 and 15 digits.";
+        return;
+      }
+  
+      if (password.length < 6) {
+        errorDiv.textContent = "❌ Password must be at least 6 characters.";
+        return;
+      }
+  
+      // إرسال البيانات
+      const userData = { name, email, phone, password };
+  
+      try {
+        const res = await fetch("http://localhost:5000/api/users/register", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(userData),
+        });
+  
+        const data = await res.json();
+  
+        if (res.ok) {
+          errorDiv.style.color = "green";
+          errorDiv.textContent = "✅ Registration successful! Redirecting to login...";
+          // الانتقال بعد نجاح التسجيل
+          setTimeout(() => {
+            window.location.href = "UserLogin.html";
+          }, 2000);
+        } else {
+          errorDiv.textContent = "❌ " + (data.message || "Registration failed.");
+        }
+      } catch (err) {
+        errorDiv.textContent = "❌ Server error: " + err.message;
+      }
+    });
+  </script>
+  
+
+</body>
+</html>

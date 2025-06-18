@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الصفحة الرئيسية</title>
+    <style>
+        /* نفس التنسيقات السابقة */
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            text-align: center;
+            color: rgb(124, 11, 77);
+            position: relative;
+            overflow-x: hidden;
+            font-family: Arial, sans-serif;
+        }
+
+        body::after {
+            content: "";
+            background-color: pink;
+            background-size: cover;
+            background-repeat: no-repeat;
+            position: absolute;
+            top: -30px;
+            left: -30px;
+            right: -30px;
+            bottom: -30px;
+            z-index: -2;
+            filter: blur(4px);
+        }
+
+        .content {
+            position: relative;
+            z-index: 1;
+            padding: 40px;
+            color: white;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 10px;
+            max-width: 900px;
+            margin: 100px auto 0;
+            text-align: left;
+        }
+
+        .content h1 {
+            font-size: 5em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-shadow: 5px 5px 2px #8e125c;
+        }
+
+        .content p {
+            color: white;
+            font-size: 1em;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        form {
+            margin-top: 40px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .login-btn, .admin-login-btn, .reviews-btn {
+            width: 200px;
+            padding: 20px;
+            font-size: 1.2em;
+            color: white;
+            background-color: rgb(124, 11, 77);
+            border: 3px solid pink;
+            border-radius: 30px;
+            cursor: pointer;
+        }
+
+        .login-btn:hover, .admin-login-btn:hover, .reviews-btn:hover {
+            background-color: white;
+            font-weight: bold;
+            color: rgb(124, 11, 77);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- إدراج النافبار -->
+    <div id="navbar-container"></div>
+
+    <div class="content">
+        <h1>HANDMADE <br>STORE</h1>
+        <p>
+            My store offers an easy way to access handmade work.<br>
+            You can control it simply, browse products, make purchases, <br>
+            and complete payments at your convenience.<br>
+            Don't forget to log in for easier browsing.<br>
+            Go, my friend!
+        </p>
+
+        <form>
+            <input type="button" value="ORDER NOW" class="login-btn" onclick="window.location.href='UserLogin.html'">
+            <input type="button" value="Admin Login" class="admin-login-btn" onclick="window.location.href='loginadmin.html'">
+            <!-- زر المراجعات -->
+            <input type="button" value="View Reviews" class="reviews-btn" onclick="window.location.href='productReviews.html?productId=12345'">
+        </form>
+    </div>
+
+    <script>
+        // Function to update the cart count in the navbar
+        function updateCartCount() {
+            try {
+                const cart = JSON.parse(sessionStorage.getItem('cart')) || [];
+                const totalItems = cart.reduce((total, item) => total + (item.quantity || 1), 0);
+                const countElement = document.getElementById("cart-count");
+                if (countElement) {
+                    countElement.textContent = totalItems;
+                }
+            } catch (error) {
+                console.error("Error updating cart count:", error);
+                document.getElementById("cart-count").textContent = "0";
+            }
+        }
+
+        // Load navbar and update cart count on page load
+        fetch('navbar.html')
+            .then(res => res.text())
+            .then(html => {
+                document.getElementById('navbar-container').innerHTML = html;
+                // After loading the navbar, update the cart count
+                updateCartCount();
+            });
+    </script>
+</body>
+</html>

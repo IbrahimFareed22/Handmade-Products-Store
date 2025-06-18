@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "mongodb": "^6.16.0",
+    "start": "nodemon server.js"
+  }
+}

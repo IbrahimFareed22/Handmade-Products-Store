@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products Display</title>
+    <style>
+        body {
+            background-color: pink;
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            text-align: center;
+            color: rgb(124, 11, 77);
+        }
+
+        h1 {
+            font-size: 48px;
+            font-weight: bold;
+            color: white;
+            margin-top: 20px;
+            text-shadow: 5px 5px 2px #8e125c;
+        }
+
+        .product-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .product-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 220px;
+            margin: 20px;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .product-container img {
+            width: 200px;
+            height: 200px;
+            border-radius: 10px;
+            box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .product-details {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .product-name {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .product-price {
+            color: darkred;
+            font-weight: bold;
+        }
+
+        .product-description {
+            font-size: 14px;
+            color: #333;
+        }
+
+        .add-to-cart-button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: #7c0b4d;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .add-to-cart-button:hover {
+            background-color: darkred;
+        }
+
+        .success-message {
+            display: none;
+            background-color: purple;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 5px 5px 4px rgba(0, 0, 0, 0.5);
+            font-size: 14px;
+            font-weight: bold;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        h1 {
+            font-size: 48px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            margin-top: 100px;
+        }
+    </style>
+</head>
+<body>
+    <div id="navbar-container"></div>
+    <div><h1>Product Display</h1></div>
+    <div class="product-grid" id="productGrid"></div>
+
+    <script>
+        // Load the navbar
+        fetch('navbar.html')
+            .then(res => res.text())
+            .then(html => {
+                document.getElementById('navbar-container').innerHTML = html;
+                // Make sure cart count is updated after navbar loads
+                updateCartCountDisplay();
+            });
+        
+        // Function to update cart count display
+        function updateCartCountDisplay() {
+            const cart = JSON.parse(sessionStorage.getItem('cart')) || [];
+            // Calculate total quantity across all items
+            const totalItems = cart.reduce((total, item) => total + item.quantity, 0);
+            
+            // Update display if element exists
+            const cartCountElement = document.getElementById("cart-count");
+            if (cartCountElement) {
+                cartCountElement.textContent = totalItems;
+            }
+        }
+    
+        window.onload = async function() {
+            const container = document.getElementById('productGrid');
+            const urlParams = new URLSearchParams(window.location.search);
+            const categoryId = urlParams.get('categoryId');
+    
+            // Update cart count initially on page load
+            updateCartCountDisplay();
+    
+            try {
+                const res = await fetch(`http://localhost:5000/api/products?categoryId=${categoryId}`);
+                if (!res.ok) throw new Error(res.statusText);
+                const products = await res.json();
+    
+                products.forEach(product => {
+                    const productContainer = document.createElement('div');
+                    productContainer.classList.add('product-container');
+    
+                    productContainer.innerHTML = `
+                        <div class="product-name">${product.name}</div>
+                        <img src="${product.image}" alt="${product.name}">
+                        <div class="product-details">
+                            <p class="product-price">${product.price} $</p>
+                            <p class="product-description">${product.description}</p>
+                            <button class="add-to-cart-button" data-id="${product._id}">Add to Cart</button>
+                        </div>
+                        <div class="success-message">
+                            Added Successfully <span class="checkmark">✔</span>
+                        </div>
+                    `;
+    
+                    const addToCartButton = productContainer.querySelector('.add-to-cart-button');
+                    addToCartButton.addEventListener('click', function() {
+                        // Get cart from sessionStorage
+                        let cart = JSON.parse(sessionStorage.getItem('cart')) || [];
+                        
+                        // Prepare product object with all necessary data
+                        const productObj = {
+                            _id: product._id,
+                            name: product.name,
+                            price: product.price,
+                            image: product.image
+                        };
+                        
+                        // Check if product is already in cart
+                        const existingItemIndex = cart.findIndex(item => item.productId._id === product._id);
+                        
+                        if (existingItemIndex !== -1) {
+                            // If product already exists, increment quantity
+                            cart[existingItemIndex].quantity += 1;
+                        } else {
+                            // Add new item to cart with quantity 1
+                            cart.push({
+                                productId: productObj,
+                                quantity: 1
+                            });
+                        }
+                        
+                        // Save to sessionStorage
+                        sessionStorage.setItem('cart', JSON.stringify(cart));
+                        
+                        // Update cart count display
+                        updateCartCountDisplay();
+    
+                        // Show success message
+                        const successMessage = productContainer.querySelector('.success-message');
+                        successMessage.style.display = 'block';
+    
+                        // Hide the success message after 3 seconds
+                        setTimeout(() => {
+                            successMessage.style.display = 'none';
+                        }, 3000);
+                    });
+    
+                    container.appendChild(productContainer);
+                });
+                
+                // Update cart count after products load
+                updateCartCountDisplay();
+                
+            } catch (err) {
+                console.error('Error loading products:', err);
+                alert('Error loading products.');
+            }
+        };
+    </script>
+</body>
+</html>

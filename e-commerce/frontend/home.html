@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8" />
+  <title>Home</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      text-align: center;
+      color: rgb(124, 11, 77);
+      position: relative;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    }
+
+    body::after {
+      content: "";
+      background-color: pink;
+      background-size: cover;
+      background-repeat: no-repeat;
+      position: absolute;
+      top: -30px;
+      left: -30px;
+      right: -30px;
+      bottom: -30px;
+      z-index: -2;
+      filter: blur(4px);
+    }
+
+    .user-form {
+      position: relative;
+      z-index: 1;
+      padding: 40px;
+      color: white;
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 10px;
+      max-width: 600px;
+      margin: 0 auto;
+      text-align: left;
+    }
+
+    .user-form h2 {
+      font-size: 2em;
+      margin-bottom: 20px;
+    }
+
+    .user-form input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid rgb(124, 11, 77);
+      border-radius: 5px;
+    }
+
+    .user-form button {
+      width: 100%;
+      padding: 15px;
+      font-size: 1.2em;
+      background-color: rgb(124, 11, 77);
+      color: white;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+    }
+
+    .user-form button:hover {
+      background-color: white;
+      color: rgb(124, 11, 77);
+      font-weight: bold;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .alert {
+      color: red;
+      font-weight: bold;
+    }
+
+    .user-form button.edit-button {
+      background-color: limegreen; /* تغيير لون زر التعديل */
+      margin-top: 15px;
+    }
+
+    .user-form button.delete-button {
+      background-color: crimson; /* تغيير لون زر الحذف */
+      margin-top: 15px;
+    }
+
+    /* نموذج التعديل */
+    #editProfileForm {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.6);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #editProfileForm .form-container {
+      background: rgba(0, 0, 0, 0.8);
+      color: white;
+      padding: 30px;
+      border-radius: 10px;
+      max-width: 400px;
+      width: 100%;
+    }
+
+    #editProfileForm input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid rgb(124, 11, 77);
+      border-radius: 5px;
+    }
+
+    #editProfileForm button {
+      width: 100%;
+      padding: 15px;
+      background-color: rgb(124, 11, 77);
+      color: white;
+      border: none;
+      border-radius: 30px;
+      cursor: pointer;
+    }
+
+    #editProfileForm button.cancel-button {
+      background-color: crimson;
+    }
+
+    #editProfileForm button.save-button {
+      background-color: limegreen;
+    }
+  </style>
+</head>
+<body>
+  <div class="user-form">
+    <h2>Welcome</h2>
+    <label for="name">Name:</label>
+    <input type="text" id="name" placeholder="Name" disabled />
+    <label for="email">Email:</label>
+    <input type="email" id="email" placeholder="Email" disabled />
+    <label for="phone">Phone:</label>
+    <input type="text" id="phone" placeholder="Phone" disabled />
+    <button class="edit-button" onclick="openEditProfileForm()">Edit Profile</button>
+    <button class="delete-button" onclick="deleteUser()">Delete Account</button>
+    <div id="errorMessage" class="alert"></div>
+
+    <!-- الزرين للانتقال إلى start أو cart -->
+    <button onclick="window.location.href='start.html'">Go to Start Page</button>
+    <button onclick="window.location.href='cart.html'">Go to Cart</button>
+  </div>
+
+  <!-- Edit Profile Form -->
+  <div id="editProfileForm">
+    <div class="form-container">
+      <h2>Edit Profile</h2>
+      <label for="editName">Name:</label>
+      <input type="text" id="editName" placeholder="Name" />
+      <label for="editEmail">Email:</label>
+      <input type="email" id="editEmail" placeholder="Email" />
+      <label for="editPhone">Phone:</label>
+      <input type="text" id="editPhone" placeholder="Phone" />
+      <button class="save-button" onclick="saveUserChanges()">Save Changes</button>
+      <button class="cancel-button" onclick="closeEditProfileForm()">Cancel</button>
+    </div>
+  </div>
+
+  <script>
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user || !user.id) {
+      alert("User not logged in.");
+      window.location.href = "UserLogin.html";
+    }
+
+    // جلب بيانات المستخدم من API لملء الحقول
+    async function loadUserData() {
+      try {
+        const res = await fetch(`http://localhost:5000/api/users/${user.id}`);
+        const data = await res.json();
+        if (res.ok) {
+          document.getElementById("name").value = data.name;
+          document.getElementById("email").value = data.email;
+          document.getElementById("phone").value = data.phone;
+        } else {
+          alert("Failed to load data: " + data.message);
+        }
+      } catch (err) {
+        alert("Error loading data.");
+      }
+    }
+
+    // تم تحميل بيانات المستخدم عند تحميل الصفحة
+    loadUserData();
+
+    // فتح نموذج التعديل
+    function openEditProfileForm() {
+      document.getElementById("editName").value = document.getElementById("name").value;
+      document.getElementById("editEmail").value = document.getElementById("email").value;
+      document.getElementById("editPhone").value = document.getElementById("phone").value;
+      document.getElementById("editProfileForm").style.display = 'flex'; // عرض النموذج
+    }
+
+    // إغلاق نموذج التعديل
+    function closeEditProfileForm() {
+      document.getElementById("editProfileForm").style.display = 'none'; // إخفاء النموذج
+    }
+
+    // حفظ التعديلات
+    async function saveUserChanges() {
+      const updated = {
+        name: document.getElementById("editName").value,
+        email: document.getElementById("editEmail").value,
+        phone: document.getElementById("editPhone").value
+      };
+
+      try {
+        const res = await fetch(`http://localhost:5000/api/users/${user.id}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify(updated)
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          alert("Profile updated successfully.");
+          localStorage.setItem("user", JSON.stringify(data)); // تحديث البيانات محليًا
+          loadUserData(); // تحديث العرض
+          closeEditProfileForm(); // إغلاق النموذج
+        } else {
+          alert("Failed to update profile: " + data.message);
+        }
+      } catch (err) {
+        alert("Error updating profile.");
+      }
+    }
+
+    // حذف الحساب
+    async function deleteUser() {
+      const confirmation = confirm("Are you sure you want to delete your account?");
+      if (!confirmation) return;
+
+      try {
+        const res = await fetch(`http://localhost:5000/api/users/${user.id}`, {
+          method: "DELETE"
+        });
+
+        const data = await res.json();
+        if (res.ok) {
+          alert("Account deleted.");
+          localStorage.removeItem("user");
+          window.location.href = "UserRegister.html";
+        } else {
+          alert("Failed to delete account: " + data.message);
+        }
+      } catch (err) {
+        alert("Error deleting account.");
+      }
+    }
+  </script>
+</body>
+</html>
