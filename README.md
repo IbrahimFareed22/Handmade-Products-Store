@@ -42,5 +42,7 @@ npm run dev
 
  Author
 Ibrahim Fareed Mustafa 
+
 [GitHub] (https://github.com/IbrahimFareed22) 
+
 [LinkedIn] (https://linkedin.com/in/ibrahim-fareed-181127243)
